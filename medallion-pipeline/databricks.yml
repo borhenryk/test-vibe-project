@@ -5,6 +5,9 @@ bundle:
   name: medallion_pipeline
 
 variables:
+  workspace_host:
+    description: "Databricks workspace URL"
+    default: "https://dbc-cc0aa83c-12fd.cloud.databricks.com"
   catalog:
     description: "Unity Catalog name"
     default: "dbdemos_henryk"
@@ -22,22 +25,16 @@ targets:
   dev:
     mode: development
     default: true
-    variables:
-      workspace_host: "https://dbc-cc0aa83c-12fd.cloud.databricks.com"
     workspace:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 
   staging:
     mode: development
-    variables:
-      workspace_host: "https://dbc-cc0aa83c-12fd.cloud.databricks.com"
     workspace:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 
   prod:
     mode: production
-    variables:
-      workspace_host: "https://dbc-cc0aa83c-12fd.cloud.databricks.com"
     workspace:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
     run_as:
