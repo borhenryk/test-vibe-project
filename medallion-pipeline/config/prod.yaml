@@ -1,0 +1,21 @@
+# Production Environment Configuration
+# Used for production workloads
+
+environment: prod
+catalog: dbdemos_henryk
+schema: medallion_pipeline
+
+# Compute settings
+compute:
+  use_serverless: true
+
+# Data settings
+data:
+  source: sklearn_iris
+  version: "1.0"
+
+# Pipeline settings
+pipeline:
+  schedule_enabled: true
+  schedule_cron: "0 0 6 * * ?"  # Daily at 6 AM UTC
+  notification_emails: []

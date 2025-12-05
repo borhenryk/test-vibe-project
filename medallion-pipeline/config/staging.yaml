@@ -1,0 +1,20 @@
+# Staging Environment Configuration
+# Used for pre-production testing
+
+environment: staging
+catalog: dbdemos_henryk
+schema: medallion_pipeline
+
+# Compute settings
+compute:
+  use_serverless: true
+
+# Data settings
+data:
+  source: sklearn_iris
+  version: "1.0"
+
+# Pipeline settings
+pipeline:
+  schedule_enabled: false
+  notification_emails: []

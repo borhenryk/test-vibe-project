@@ -1,0 +1,65 @@
+# Medallion Pipeline Job Definition
+# Orchestrates Bronze → Silver → Gold data transformations
+
+resources:
+  jobs:
+    medallion_pipeline_job:
+      name: "[${bundle.target}] Medallion Pipeline - Iris Dataset"
+      description: |
+        Data Engineering Pipeline using Medallion Architecture:
+        - Bronze: Raw iris data ingestion
+        - Silver: Cleaned and standardized data
+        - Gold: Aggregated analytics-ready data
+      
+      schedule:
+        # Run daily at 6 AM UTC (can be adjusted per environment)
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: "UTC"
+        pause_status: PAUSED
+
+      email_notifications:
+        on_failure:
+          - ${workspace.current_user.userName}
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+
+      tasks:
+        - task_key: bronze_ingestion
+          description: "Ingest raw iris data into Bronze layer"
+          notebook_task:
+            notebook_path: ../src/medallion_pipeline/bronze/01_ingest_bronze.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+            source: WORKSPACE
+
+        - task_key: silver_transformation
+          description: "Clean and standardize data for Silver layer"
+          depends_on:
+            - task_key: bronze_ingestion
+          notebook_task:
+            notebook_path: ../src/medallion_pipeline/silver/02_transform_silver.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+            source: WORKSPACE
+
+        - task_key: gold_aggregation
+          description: "Aggregate and enrich data for Gold layer"
+          depends_on:
+            - task_key: silver_transformation
+          notebook_task:
+            notebook_path: ../src/medallion_pipeline/gold/03_aggregate_gold.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+            source: WORKSPACE
+
+      tags:
+        project: medallion_pipeline
+        layer: all
+        environment: ${bundle.target}
