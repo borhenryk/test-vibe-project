@@ -5,9 +5,6 @@ bundle:
   name: medallion_pipeline
 
 variables:
-  workspace_host:
-    description: "Databricks workspace URL"
-    default: "https://dbc-cc0aa83c-12fd.cloud.databricks.com"
   catalog:
     description: "Unity Catalog name"
     default: "dbdemos_henryk"
@@ -15,8 +12,8 @@ variables:
     description: "Schema name for medallion tables"
     default: "medallion_pipeline"
 
-workspace:
-  host: ${var.workspace_host}
+# Note: workspace.host is configured via DATABRICKS_HOST environment variable
+# which is set from GitHub secrets in CI/CD
 
 include:
   - resources/*.yml
