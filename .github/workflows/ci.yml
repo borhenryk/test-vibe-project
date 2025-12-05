@@ -1,0 +1,138 @@
+# Medallion Pipeline CI/CD Workflow
+# Deploys Data Engineering pipeline to Databricks using Asset Bundles
+
+name: Medallion Pipeline CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'medallion-pipeline/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'medallion-pipeline/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      run_job:
+        description: 'Run the pipeline job after deployment'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+jobs:
+  validate:
+    name: Validate Bundle
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: medallion-pipeline
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          databricks --version
+
+      - name: Validate bundle (dev)
+        run: |
+          databricks bundle validate -t dev
+
+      - name: Validate bundle (staging)
+        run: |
+          databricks bundle validate -t staging
+
+      - name: Validate bundle (prod)
+        run: |
+          databricks bundle validate -t prod
+
+  deploy-dev:
+    name: Deploy to Dev
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    environment: dev
+    defaults:
+      run:
+        working-directory: medallion-pipeline
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy bundle to Dev
+        run: |
+          databricks bundle deploy -t dev
+
+      - name: Run pipeline job (optional)
+        if: github.event.inputs.run_job == 'true'
+        run: |
+          databricks bundle run medallion_pipeline_job -t dev
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    defaults:
+      run:
+        working-directory: medallion-pipeline
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy bundle to Staging
+        run: |
+          databricks bundle deploy -t staging
+
+  deploy-prod:
+    name: Deploy to Prod
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: prod
+    defaults:
+      run:
+        working-directory: medallion-pipeline
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy bundle to Prod
+        run: |
+          databricks bundle deploy -t prod
