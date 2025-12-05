@@ -31,7 +31,7 @@ resources:
         - task_key: bronze_ingestion
           description: "Ingest raw iris data into Bronze layer"
           notebook_task:
-            notebook_path: src/medallion_pipeline/bronze/01_ingest_bronze.py
+            notebook_path: ../src/medallion_pipeline/bronze/01_ingest_bronze
             base_parameters:
               catalog: "{{job.parameters.catalog}}"
               schema: "{{job.parameters.schema}}"
@@ -41,7 +41,7 @@ resources:
           depends_on:
             - task_key: bronze_ingestion
           notebook_task:
-            notebook_path: src/medallion_pipeline/silver/02_transform_silver.py
+            notebook_path: ../src/medallion_pipeline/silver/02_transform_silver
             base_parameters:
               catalog: "{{job.parameters.catalog}}"
               schema: "{{job.parameters.schema}}"
@@ -51,7 +51,7 @@ resources:
           depends_on:
             - task_key: silver_transformation
           notebook_task:
-            notebook_path: src/medallion_pipeline/gold/03_aggregate_gold.py
+            notebook_path: ../src/medallion_pipeline/gold/03_aggregate_gold
             base_parameters:
               catalog: "{{job.parameters.catalog}}"
               schema: "{{job.parameters.schema}}"
